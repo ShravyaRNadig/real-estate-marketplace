@@ -1,8 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import mongoose from 'mongoose';
+import "dotenv/config";
 
 const app = express();
+
+// connect to mongodb
+mongoose.connect(process.env.DATABASE)
+.then(()=>console.log("DB Connected"))
+.catch((err)=>console.log("DB Connection Error =>",err));
 
 // middleware
 app.use(cors());
