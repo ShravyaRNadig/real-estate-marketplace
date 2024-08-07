@@ -51,14 +51,36 @@ export const login = async (req, res) => {
                 });
             }
             catch (err) {
+                console.log(err)
                 return res.json({ error: "Invalid Email. Please use a valid email address" });
             }
         } else {
-            // compare pwd
+            // compare pwd then login
+            const match = await comparePassword(password, user.password);
+            if (!match) {
+                return res.json({
+                    error: "Wrong password",
+                });
+            } else {
+                const token = jwt.sign(
+                    { _id: user._id },
+                    process.env.JWT_SECRET,
+                    { expiresIn: '2d' }
+                );
+
+                createdUser.password = undefined;
+                res.json({
+                    token,
+                    user: createdUser
+                });
+            }
         }
     }
     catch (err) {
-
+        console.log("Login error", err);
+        res.json({
+            error: "Something went wrong. Try again",
+        });
     }
 
     // Welcome email
