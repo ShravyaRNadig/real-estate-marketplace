@@ -4,3 +4,5 @@ node_modules/
 # Other common ignores (optional, add as needed)
 .DS_Store
 npm-debug.log
+.env
+config
