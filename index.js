@@ -4,6 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth.js';
+import adRoutes from "./routes/ad.js";
 import dotenv from 'dotenv';
 
 const app = express();
@@ -19,6 +20,7 @@ mongoose.connect(process.env.DATABASE)
         console.log("DB Connected");
         // routes middleware
         app.use('/', authRoutes);
+        app.use('/', adRoutes);
 
         app.listen(8000, () => {
             console.log("Server is running in 8000")
