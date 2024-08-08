@@ -4,8 +4,9 @@ import { requireSignin } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-router.get('/', requireSignin, auth.api);
+router.get('/', auth.api);
 router.post("/login", auth.login);
 router.post('/forgot-password', auth.forgotPassword);
+router.get('/current-user', auth.currentUser);
 
 export default router;

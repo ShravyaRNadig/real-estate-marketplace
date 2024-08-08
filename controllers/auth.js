@@ -31,7 +31,7 @@ export const login = async (req, res) => {
     try {
         // Check if the user exists
         const user = await User.findOne({ email });
-    
+
         if (!user) {
             // If the user does not exist, create a new user
             try {
@@ -41,14 +41,14 @@ export const login = async (req, res) => {
                     password: await hashPassword(password),
                     username: nanoid(6)
                 });
-    
+
                 // Create a JWT token for the newly created user
                 const token = jwt.sign(
                     { _id: createdUser._id },
                     process.env.JWT_SECRET,
                     { expiresIn: '2d' }
                 );
-    
+
                 createdUser.password = undefined; // Hide the password field
                 return res.json({
                     token,
@@ -61,7 +61,7 @@ export const login = async (req, res) => {
         } else {
             // User exists, validate password
             const match = await comparePassword(password, user.password);
-    
+
             if (!match) {
                 return res.json({
                     error: "Incorrect password",
@@ -73,7 +73,7 @@ export const login = async (req, res) => {
                     process.env.JWT_SECRET,
                     { expiresIn: '2d' }
                 );
-    
+
                 user.password = undefined; // Hide the password field
                 return res.json({
                     token,
@@ -87,7 +87,7 @@ export const login = async (req, res) => {
             error: "Something went wrong. Please try again.",
         });
     }
-    
+
 
     // Welcome email
     // try {
@@ -130,6 +130,19 @@ export const forgotPassword = async (req, res) => {
         console.log("Forgot password error", err);
         res.json({
             error: "Something went wrong. Try again."
+        });
+    }
+};
+
+export const currentUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        user.password = undefined;
+        res.json({ user });
+    } catch (err) {
+        console.log("Current user error", err);
+        res.json({
+            error: "Something went wrong. Please try again.",
         });
     }
 };
