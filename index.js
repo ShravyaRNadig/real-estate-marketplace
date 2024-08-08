@@ -4,6 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth.js';
+import dotenv from 'dotenv';
 
 const app = express();
 
@@ -24,4 +25,4 @@ mongoose.connect(process.env.DATABASE)
         });
     })
     .catch((err) => console.log("DB Connection Error =>", err));
-
+    dotenv.config();

@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendLoginEmail = (to, name) => {
+const sendWelcomeEmail = (to, name) => {
   const mailOptions = {
     from: process.env.EMAIL_FROM,
     to,
@@ -26,4 +26,21 @@ const sendLoginEmail = (to, name) => {
     });
 };
 
-export { sendLoginEmail };
+const sendPasswordResetEmail = (to, name, resetToken) => {
+  const mailOptions = {
+    from: process.env.EMAIL_FROM,
+    to,
+    subject: `Password Reset for ${process.env.APP_NAME}`,
+    text: `Hi ${name},\n\nWe received a request to reset your password for ${process.env.APP_NAME}.\n\nPlease use the following link to reset your password:\n\n${process.env.APP_URL}/reset-password?token=${resetToken} & resendToken=${resendToken} please change as soon as possible\n\nIf you didn't request this change, you can ignore this email.\n\nBest regards,\nThe Team`,
+  };
+
+  return transporter.sendMail(mailOptions)
+    .then(info => console.log('Password reset email sent:', info))
+    .catch(error => {
+      console.error('Error sending password reset email:', error);
+      throw error;
+    });
+}
+
+
+export { sendWelcomeEmail ,sendPasswordResetEmail};
