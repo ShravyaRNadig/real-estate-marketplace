@@ -7,6 +7,7 @@ const router = express.Router();
 router.get('/', auth.api);
 router.post("/login", auth.login);
 router.post('/forgot-password', auth.forgotPassword);
-router.get('/current-user', auth.currentUser);
+router.get('/current-user', requireSignin, auth.currentUser);
+router.put('/update-password', requireSignin, auth.updatePassword)
 
 export default router;

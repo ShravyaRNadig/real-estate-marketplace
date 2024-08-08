@@ -146,3 +146,35 @@ export const currentUser = async (req, res) => {
         });
     }
 };
+
+export const updatePassword = async (req, res) => {
+    try {
+        let { password } = req.body;
+
+        // trim password
+        password = password ? password.trim() : "";
+
+        if (!password) {
+            return res.json({ error: "Password is required" });
+        }
+
+        if (password?.length < 6) {
+            return res.json({ error: "Password must be at least 6 characters long" });
+        }
+
+        const user = await User.findById(req.user._id);
+        const hashedPassword = await hashPassword(password);
+
+        // user.password = hashedPassword;
+        // user.save();
+
+        await User.findByIdAndUpdate(req.user._id, { password: hashedPassword });
+
+        res.json({ok: true});
+    } catch (err) {
+        console.log("Update password error", err);
+        res.json({
+            error: "Something went wrong. Please try again.",
+        });
+    }
+};
