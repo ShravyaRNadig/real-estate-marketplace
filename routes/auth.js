@@ -8,6 +8,7 @@ router.get('/', auth.api);
 router.post("/login", auth.login);
 router.post('/forgot-password', auth.forgotPassword);
 router.get('/current-user', requireSignin, auth.currentUser);
-router.put('/update-password', requireSignin, auth.updatePassword)
+router.put('/update-password', requireSignin, auth.updatePassword);
+router.put('/update-username', requireSignin, auth.updateUserName);
 
 export default router;

@@ -170,11 +170,48 @@ export const updatePassword = async (req, res) => {
 
         await User.findByIdAndUpdate(req.user._id, { password: hashedPassword });
 
-        res.json({ok: true});
+        res.json({ ok: true });
     } catch (err) {
         console.log("Update password error", err);
         res.json({
             error: "Something went wrong. Please try again.",
+        });
+    }
+};
+
+export const updateUserName = async (req, res) => {
+    try {
+        const { username } = req.body;
+
+        if (!username || !username.trim()) {
+            return res.json({ error: "Username is required" });
+        }
+
+        const trimmedUsername = username.trim();
+
+        // check if the username is already taken by another user
+        const existingUser = await User.findOne({ username: trimmedUsername });
+        if (existingUser) {
+            return res.json({
+                error: "Username is already taken. Try another one"
+            });
+        }
+
+        // update the user name
+        const updatedUser = await User.findOne(req.user._id,
+            {
+                username: trimmedUsername,
+            },
+            { new: true }
+        );
+
+        updateUser.password = undefined;
+
+        res.json(updatedUser);
+    } catch (err) {
+        console.log("Update Username error", err);
+        res.json({
+            error: "Username already taken. Try another one.",
         });
     }
 };
