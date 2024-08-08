@@ -1,46 +1,87 @@
-// email.js
-import nodemailer from 'nodemailer'; // Use import statement
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 
-// Create a transporter object using your SMTP service configuration
-const transporter = nodemailer.createTransport({
-  service: 'Gmail', // You can use other services like 'SendGrid', 'Mailgun', etc.
-  auth: {
-    user: process.env.EMAIL_FROM,
-    pass: process.env.EMAIL_PASSWORD,
-  },
+const client = new SESClient({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+  apiVersion: process.env.AWS_API_VERSION,
 });
 
-const sendWelcomeEmail = (to, name) => {
-  const mailOptions = {
-    from: process.env.EMAIL_FROM,
-    to,
-    subject: `Welcome to ${process.env.APP_NAME}`,
-    text: `Hi ${name},\n\nThank you for joining us on our ${process.env.APP_NAME}!\n\nBest regards,\nThe Team`,
+export const sendWelcomeEmail = async (email) => {
+  const params = {
+    Source: process.env.EMAIL_FROM,
+    ReplyToAddresses: [process.env.EMAIL_TO],
+    Destination: {
+      ToAddresses: [email],
+    },
+    Message: {
+      Body: {
+        Html: {
+          Charset: "UTF-8",
+          Data: `
+            <html> 
+              <p>Good day! Welcome to ${process.env.APP_NAME} and thank you for joining us.</p>
+
+              <div style="margin:20px auto;">
+                <a href="${process.env.CLIENT_URL}" style="margin-right:50px;">Browse properties</a>
+                <a href="${process.env.CLIENT_URL}/post-ad">Post ad</a>
+              </div>
+
+              <i>Team ${process.env.APP_NAME}</i>
+            </html>            
+          `,
+        },
+      },
+      Subject: {
+        Charset: "UTF-8",
+        Data: `Welcome to ${process.env.APP_NAME}`,
+      },
+    },
   };
 
-  return transporter.sendMail(mailOptions)
-    .then(info => console.log('Email sent:', info))
-    .catch(error => {
-      console.error('Error sending email:', error);
-      throw error; 
-    });
+  const command = new sendWelcomeEmail(params);
+  try {
+    const data = new client(command);
+    return data
+  } catch (err) {
+    throw err
+  }
 };
 
-const sendPasswordResetEmail = (to, name, resetToken) => {
-  const mailOptions = {
-    from: process.env.EMAIL_FROM,
-    to,
-    subject: `Password Reset for ${process.env.APP_NAME}`,
-    text: `Hi ${name},\n\nWe received a request to reset your password for ${process.env.APP_NAME}.\n\nPlease use the following link to reset your password:\n\n${process.env.APP_URL}/reset-password?token=${resetToken} & resendToken=${resendToken} please change as soon as possible\n\nIf you didn't request this change, you can ignore this email.\n\nBest regards,\nThe Team`,
+export const sendPasswordResetEmail = async (email, code) => {
+  const params = {
+    Source: process.env.EMAIL_FROM,
+    ReplyToAddresses: [process.env.EMAIL_TO],
+    Destination: {
+      ToAddresses: [email],
+    },
+    Message: {
+      Body: {
+        Html: {
+          Charset: "UTF-8",
+          Data: `
+            <html> 
+              <p>Good day! Here is your password reset code : </p>
+              <h2 style="color:red">${code}</h2>
+
+              <i>Team ${process.env.APP_NAME}</i>
+            </html>            
+          `,
+        },
+      },
+      Subject: {
+        Charset: "UTF-8",
+        Data: `Password reset code - ${process.env.APP_NAME}`,
+      },
+    },
   };
 
-  return transporter.sendMail(mailOptions)
-    .then(info => console.log('Password reset email sent:', info))
-    .catch(error => {
-      console.error('Error sending password reset email:', error);
-      throw error;
-    });
-}
+  const command = new sendPasswordResetEmail(params);
 
-
-export { sendWelcomeEmail ,sendPasswordResetEmail};
+  try {
+    const data = new client(command);
+    return data
+  } catch (err) {
+    throw err
+  }
+};

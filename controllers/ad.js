@@ -1,4 +1,6 @@
-export const uploadImage = (req, res) => {
+import { uploadImageToS3 } from '../helpers/upload.js';
+
+export const uploadImage = async (req, res) => {
     try {
         console.log("Upload Image", req.files);
         if (!req.files || req.files === 0) {
@@ -10,13 +12,9 @@ export const uploadImage = (req, res) => {
         const files = Array.isArray(req.files) ? req.files : [req.files];
 
         // upload image to s3
-        const images = req.files.map((file) => {
-            return {
-                url: file.location,
-                key: file.key
-            }
-        });
-        res.json({ images });
+        const results = await uploadImageToS3(files, req.user._id);
+        // console.log("results", results);
+        res.json(results);
     } catch (err) {
         console.log("upload Image error", err);
         res.json({

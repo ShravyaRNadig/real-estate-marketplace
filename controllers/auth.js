@@ -87,15 +87,6 @@ export const login = async (req, res) => {
             error: "Something went wrong. Please try again.",
         });
     }
-
-
-    // Welcome email
-    // try {
-    //     await sendWelcomeEmail(email);
-    //     res.status(200).send('Welcome mail sent successful. Please check your email for confirmation.');
-    // } catch (error) {
-    //     res.status(500).send('There was an error sending the email.');
-    // }
 };
 
 export const forgotPassword = async (req, res) => {
@@ -114,7 +105,7 @@ export const forgotPassword = async (req, res) => {
 
             // send email
             try {
-                await sendPasswordResetEmail(email, userName, password);
+                await sendPasswordResetEmail(email, password);
                 return res.json({
                     message: "Password reset link has been sent to email",
                 });
