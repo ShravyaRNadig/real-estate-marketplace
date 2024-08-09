@@ -1,4 +1,5 @@
 import { uploadImageToS3, deleteImageFromS3 } from '../helpers/upload.js';
+import { geocoderAddress } from '../helpers/google.js';
 
 export const uploadImage = async (req, res) => {
     try {
@@ -23,6 +24,7 @@ export const uploadImage = async (req, res) => {
 export const removeImage = async (req, res) => {
     try {
         const { Key, uploadedBy } = req.body;
+
         // check if the current user id matches the uploadedBy id
         if (req.user._id !== uploadedBy) {
             return res.status(401).json({ error: "Unauthorized" })
@@ -32,13 +34,33 @@ export const removeImage = async (req, res) => {
             await deleteImageFromS3(Key)
             return res.json({ success: true })
         } catch (err) {
+            console.log(err);
             res.json({
                 error: "Remove image failed",
             });
         }
     } catch (err) {
+        console.log(err);
         res.json({
             error: "Remove Image failed",
+        });
+    }
+};
+
+export const createAd = async (req, res) => {
+    try {
+        const { address } = req.body;
+
+        if (!address.trim()) {
+            return res.json({ error: "Address is required" });
+        }
+
+        const { location, googleMap } = await geocoderAddress(address);
+        res.json({ location, googleMap });
+    } catch (err) {
+        console.log(err);
+        res.json({
+            error: "Create ad failed",
         });
     }
 };
