@@ -90,6 +90,10 @@ export const login = async (req, res) => {
 };
 
 export const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    if (!validator.validate(email)) {
+        return res.json({ error: "A Valid email required" });
+    }
     try {
         const { email } = req.body;
         let user = await User.findOne({ email });
@@ -110,7 +114,7 @@ export const forgotPassword = async (req, res) => {
                     message: "Password reset link has been sent to email",
                 });
             } catch (err) {
-                console.log("Error sendimg password reset email => ", err);
+                console.log("Error sending password reset email => ", err);
                 res.json({
                     error: "If we find you're account, you will recive an email from us shortly"
                 });
@@ -120,7 +124,7 @@ export const forgotPassword = async (req, res) => {
     } catch (err) {
         console.log("Forgot password error", err);
         res.json({
-            error: "Something went wrong. Try again."
+            error: "Email is required."
         });
     }
 };

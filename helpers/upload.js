@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { nanoid } from "nanoid";
 import sharp from "sharp";
 
@@ -51,4 +51,19 @@ export const uploadImageToS3 = async (files, uploadedBy) => {
     });
 
     return Promise.all(uploadPromises);
+};
+
+export const deleteImageFromS3 = async (Key) => {
+    const params = {
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key,
+    };
+
+    try {
+        const command = new DeleteObjectCommand(params);
+        await client.send(command);
+    } catch (err) {
+        console.log("delete from s3 error => ",err);
+        throw new Error("Delete from S3 failed");
+    }
 };

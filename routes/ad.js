@@ -4,8 +4,9 @@ import { requireSignin } from '../middlewares/auth.js';
 import multer from 'multer';
 
 const router = express.Router();
-const upload = multer({storage: multer.memoryStorage()});
+const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/upload-image', upload.any(),ad.uploadImage);
+router.post('/upload-image', requireSignin, upload.any(), ad.uploadImage);
+router.delete('/remove-image', requireSignin, ad.removeImage);
 
 export default router;

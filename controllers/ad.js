@@ -1,4 +1,4 @@
-import { uploadImageToS3 } from '../helpers/upload.js';
+import { uploadImageToS3, deleteImageFromS3 } from '../helpers/upload.js';
 
 export const uploadImage = async (req, res) => {
     try {
@@ -16,9 +16,31 @@ export const uploadImage = async (req, res) => {
         // console.log("results", results);
         res.json(results);
     } catch (err) {
-        console.log("upload Image error", err);
         res.json({
             error: "Upload Image failed",
         });
     }
-}
+};
+
+export const removeImage = async (req, res) => {
+    try {
+        const { Key, uploadedBy } = req.body;
+        // check if the current user id matches the uploadedBy id
+        if (req.user._id !== uploadedBy) {
+            return res.status(401).json({ error: "Unauthorized" })
+        }
+
+        try {
+            await deleteImageFromS3(Key)
+            return res.json({ success: true })
+        } catch (err) {
+            res.json({
+                error: "Remove image failed",
+            });
+        }
+    } catch (err) {
+        res.json({
+            error: "Remove Image failed",
+        });
+    }
+};
