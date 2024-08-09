@@ -172,7 +172,30 @@ export const read = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.json({
-            errpr: "Failed to fetch. Try again",
+            error: "Failed to fetch. Try again",
         });
     }
 };
+
+export const listAdsForSell = async (req, res) => {
+    try {
+        const page = req.params.page || 1;
+        const pageSize = 2;
+        const skip = (page - 1) * pageSize;
+        const totalAds = await Ad.countDocuments({ action: "sell" });
+
+        const ads = await Ad.find({ action: "Sell" })
+            .populate('postedBy', 'name username email phone company photo logo role')
+            .select('-googleMap')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(pageSize);
+
+        res.json({ ads, page, totalPages: Math.ceil(totalAds / pageSize) });
+    } catch (err) {
+        console.log(err);
+        res.json({
+            error: "Failed to fetch. Try again",
+        });
+    }
+}
