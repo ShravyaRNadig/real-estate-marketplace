@@ -2,6 +2,8 @@ import { uploadImageToS3, deleteImageFromS3 } from '../helpers/upload.js';
 import { geocoderAddress } from '../helpers/google.js';
 import Ad from "../models/ad.js";
 import User from "../models/user.js";
+import { nanoid } from "nanoid";
+import slugify from 'slugify';
 
 export const uploadImage = async (req, res) => {
     try {
@@ -84,9 +86,9 @@ export const createAd = async (req, res) => {
 
             const ad = new Ad({
                 ...req.body,
-                slug: `${propertyType}-for-${action}-address-${address}-price-${price}-${nanoid(
+                slug: slugify(`${propertyType}-for-${action}-address-${address}-price-${price}-${nanoid(
                     6
-                )}`,
+                )}`),
                 postedBy: req.user._id,
                 location: {
                     type: 'Point',
@@ -100,6 +102,7 @@ export const createAd = async (req, res) => {
             const user = await User.findByIdAndUpdate(req.user._id, {
                 $addToSet: { role: "Seller" },
             });
+            user.password = undefined;
 
             // res.json({ok:true});
             res.json({ ad, user });
@@ -113,6 +116,63 @@ export const createAd = async (req, res) => {
         console.log(err);
         res.json({
             error: "Create ad failed",
+        });
+    }
+};
+
+export const read = async (req, res) => {
+    try {
+        const { slug } = req.params;
+
+        const ad = await Ad.findOne({ slug })
+            .select('-googleMap')
+            .populate('postedBy', 'name username email phone company photo logo role');
+
+        if (!ad) {
+            return res.status(404).json({ error: "Ad not found" });
+        }
+
+        // related ads
+        const related = await Ad.aggregate([
+            {
+                $geoNear: {
+                    near: {
+                        type: "Point",
+                        coordinates: ad.location.coordinates,
+                    },
+                    distanceField: "dist.calculated",
+                    maxDistance: 50000, //50km
+                    spherical: true,
+                },
+            },
+            {
+                $match: {
+                    _id: { $ne: ad }, //_id: { $ne: ad_id } when you are using with id
+                    action: ad.action,
+                    propertyType: ad.propertyType,
+                },
+            },
+            {
+                $limit: 3,
+            },
+            {
+                $project: {
+                    googleMap: 0,
+                },
+            },
+        ]);
+
+        // to populate postedBy in related ads
+        const relatedWithPopulatedPostedBy = await Ad.populate(related, {
+            path: 'postedBy',
+            select: 'name username email phone company photo logo role',
+        });
+
+        res.json({ ad, related: relatedWithPopulatedPostedBy });
+    } catch (err) {
+        console.log(err);
+        res.json({
+            errpr: "Failed to fetch. Try again",
         });
     }
 };

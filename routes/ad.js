@@ -9,5 +9,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.post('/upload-image', requireSignin, upload.any(), ad.uploadImage);
 router.delete('/remove-image', requireSignin, ad.removeImage);
 router.post('/create-ad',ad.createAd);
+router.get('/ad/:slug',ad.read);
 
 export default router;
