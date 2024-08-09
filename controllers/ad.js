@@ -222,3 +222,84 @@ export const listAdsForRent = async (req, res) => {
         });
     }
 };
+
+export const updateAd = async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const {
+            photos,
+            description,
+            address,
+            propertyType,
+            price,
+            landSize,
+            landsizetype,
+            action
+        } = req.body;
+
+        const isRequired = (v) => {  // helper function to send error message
+            res.json({ error: `${v} is required` });
+        };
+
+        if (!photos || photos.length === 0) return isRequired("Photos");
+        if (!description) return isRequired("Description");
+        if (!address.trim()) return isRequired("Address");
+        if (!propertyType) return isRequired("Property Type");
+        if (!price) return isRequired("Price");
+        if (!action) return isRequired("Action");
+
+        if (propertyType === "Land") {
+            if (!landSize) return isRequired("Landsize");
+            if (!landsizetype) return isRequired("Landsize Type");
+        }
+
+        const ads = await Ad.findOne({ slug }).populate("postedBy", "_id");
+
+        if (!ad) {
+            return res.status(401).json({ error: "Ad not found" });
+        }
+
+        // check if the logged in user is the owner of the ad
+        if (ad.postedBy._id.toString() !== req.user._id.toString()) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        const { location, googleMap } = await geocoderAddress(address);
+
+        try {
+
+            const ad = new Ad({
+                ...req.body,
+                slug: slugify(`${propertyType}-for-${action}-address-${address}-price-${price}-${nanoid(
+                    6
+                )}`),
+                postedBy: req.user._id,
+                location: {
+                    type: 'Point',
+                    coordinates: [location.coordinates[0], location.coordinates[1]]
+                },
+                googleMap,
+            });
+            await ad.save();
+
+            // update user role to seller
+            const user = await User.findByIdAndUpdate(req.user._id, {
+                $addToSet: { role: "Seller" },
+            });
+            user.password = undefined;
+
+            // res.json({ok:true});
+            res.json({ ad, user });
+        } catch (err) {
+            console.log(err);
+            res.json({
+                error: "Create ad failed"
+            });
+        }
+    } catch (err) {
+        console.log(err);
+        res.json({
+            error: "Create ad failed",
+        });
+    }
+};
