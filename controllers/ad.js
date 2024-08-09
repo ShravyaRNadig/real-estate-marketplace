@@ -2,11 +2,8 @@ import { uploadImageToS3, deleteImageFromS3 } from '../helpers/upload.js';
 
 export const uploadImage = async (req, res) => {
     try {
-        console.log("Upload Image", req.files);
         if (!req.files || req.files === 0) {
-            return res.json({
-                error: "No Image Found",
-            });
+            return res.json({ error: "Image is required" });
         }
         //  if only one file is uploaded, multer returns it as a simple object, not array
         const files = Array.isArray(req.files) ? req.files : [req.files];
@@ -16,6 +13,7 @@ export const uploadImage = async (req, res) => {
         // console.log("results", results);
         res.json(results);
     } catch (err) {
+        console.log(err);
         res.json({
             error: "Upload Image failed",
         });
