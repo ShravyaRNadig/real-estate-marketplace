@@ -329,3 +329,31 @@ export const deleteAd = async (req, res) => {
         });
     }
 };
+
+export const userAds = async (req, res) => {
+    try {
+        const page = req.params.page ? req.params.page : 1;
+        const pageSize = 2;
+        const skip = (page - 1) * pageSize;
+        const totalAds = await Ad.countDocuments({ postedBy: req.user._id });
+
+        const ads = await Ad.find({ postedBy: req.user._id }) // current logged in user 
+            .populate('postedBy', 'name username email phone company photo logo action')
+            .select('-googleMap')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(pageSize);
+
+        return res.json({
+            ads,
+            page,
+            totalPages: Math.ceil(totalAds / pageSize),
+        });
+    } catch (err) {
+        console.log(err);
+        res.json({
+            error: "Failed to fetch. Try Again.",
+        })
+    }
+};
+

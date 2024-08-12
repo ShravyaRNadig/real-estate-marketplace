@@ -13,6 +13,8 @@ router.get('/ad/:slug', ad.read);
 router.get('/ads-for-sell/:page', ad.listAdsForSell);
 router.get('/ads-for-rent/:page', ad.listAdsForRent);
 router.put('/update-ad/:slug', requireSignin ,ad.updateAd);
-router.delete('/delete-ad/:slug', ad.deleteAd);
+router.delete('/delete-ad/:slug', requireSignin, ad.deleteAd);
+
+router.get('/user-ads/:page', ad.userAds);
 
 export default router;
