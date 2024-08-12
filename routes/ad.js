@@ -12,10 +12,10 @@ router.post('/create-ad', requireSignin, ad.createAd);
 router.get('/ad/:slug', ad.read);
 router.get('/ads-for-sell/:page', ad.listAdsForSell);
 router.get('/ads-for-rent/:page', ad.listAdsForRent);
-router.put('/update-ad/:slug', requireSignin ,ad.updateAd);
+router.put('/update-ad/:slug', requireSignin, ad.updateAd);
 router.delete('/delete-ad/:slug', requireSignin, ad.deleteAd);
 
 router.get('/user-ads/:page', requireSignin, ad.userAds);
-router.put('/update-ad-status/:slug' ,ad.updateAdStatus);
+router.put('/update-ad-status/:slug', requireSignin, ad.updateAdStatus);
 
 export default router;
