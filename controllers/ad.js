@@ -253,7 +253,7 @@ export const updateAd = async (req, res) => {
             if (!landsizetype) return isRequired("Landsize Type");
         }
 
-        const ad = await Ad.findOne({ slug }).populate('postedBy', '_id'); 
+        const ad = await Ad.findOne({ slug }).populate('postedBy', '_id');
 
         // Check if ad was found
         if (!ad) {
@@ -265,7 +265,7 @@ export const updateAd = async (req, res) => {
             console.log(ad.postedBy)
             return res.status(400).json({ error: "Ad postedBy information is incomplete" });
         }
-        
+
 
         // Check if the logged-in user is the owner of the ad
         if (ad.postedBy._id.toString() !== req.user._id.toString()) {
@@ -296,6 +296,36 @@ export const updateAd = async (req, res) => {
         console.log(err);
         res.status(500).json({
             error: "Update ad failed",
+        });
+    }
+};
+
+export const deleteAd = async (req, res) => {
+    try {
+        const { slug } = req.params;
+
+        // Find ad by slug and populate the postedBy field
+        const ad = await Ad.findOne({ slug }).populate("postedBy", "_id");
+
+        // Check if ad was found
+        if (!ad) {
+            return res.status(404).json({ error: "Ad not found" });
+        }
+
+        // Check if the logged-in user is the owner of the ad
+        if (ad.postedBy && ad.postedBy._id.toString() !== req.user._id.toString()) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        // Delete the ad
+        await Ad.deleteOne({ slug });
+
+        // Send success response
+        res.json({ ok: true });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            error: "Delete ad failed",
         });
     }
 };
