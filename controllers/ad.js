@@ -357,3 +357,33 @@ export const userAds = async (req, res) => {
     }
 };
 
+export const updateAdStatus = async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const { status } = req.body;
+
+        const ad = await Ad.findOne({ slug });
+
+        // Check if ad was found
+        if (!ad) {
+            return res.status(404).json({ error: "Ad not found" });
+        }
+
+        // Check if the logged-in user is the owner of the ad
+        if (ad.postedBy && ad.postedBy._id.toString() !== req.user._id.toString()) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        ad.status = status;
+        await ad.save();
+
+        res.json({ ok: true });
+        // res.json(ad);
+    } catch (err) {
+        console.log(err);
+        res.json({
+            error: "Failed to update status. Try again.",
+        });
+    }
+};
+

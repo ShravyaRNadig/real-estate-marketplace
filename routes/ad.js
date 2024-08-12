@@ -15,6 +15,7 @@ router.get('/ads-for-rent/:page', ad.listAdsForRent);
 router.put('/update-ad/:slug', requireSignin ,ad.updateAd);
 router.delete('/delete-ad/:slug', requireSignin, ad.deleteAd);
 
-router.get('/user-ads/:page', ad.userAds);
+router.get('/user-ads/:page', requireSignin, ad.userAds);
+router.put('/update-ad-status/:slug' ,ad.updateAdStatus);
 
 export default router;
