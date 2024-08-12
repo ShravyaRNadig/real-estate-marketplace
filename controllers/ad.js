@@ -238,7 +238,7 @@ export const updateAd = async (req, res) => {
         } = req.body;
 
         const isRequired = (v) => {  // helper function to send error message
-            res.json({ error: `${v} is required` });
+            return res.json({ error: `${v} is required` });
         };
 
         if (!photos || photos.length === 0) return isRequired("Photos");
@@ -253,13 +253,21 @@ export const updateAd = async (req, res) => {
             if (!landsizetype) return isRequired("Landsize Type");
         }
 
-        const ads = await Ad.findOne({ slug }).populate("postedBy", "_id");
+        const ad = await Ad.findOne({ slug }).populate('postedBy', '_id'); 
 
+        // Check if ad was found
         if (!ad) {
-            return res.status(401).json({ error: "Ad not found" });
+            return res.status(404).json({ error: "Ad not found" });
         }
 
-        // check if the logged in user is the owner of the ad
+        // Check if postedBy exists before accessing _id
+        if (!ad.postedBy || !ad.postedBy._id) {
+            console.log(ad.postedBy)
+            return res.status(400).json({ error: "Ad postedBy information is incomplete" });
+        }
+        
+
+        // Check if the logged-in user is the owner of the ad
         if (ad.postedBy._id.toString() !== req.user._id.toString()) {
             return res.status(401).json({ error: "Unauthorized" });
         }
@@ -267,39 +275,27 @@ export const updateAd = async (req, res) => {
         const { location, googleMap } = await geocoderAddress(address);
 
         try {
-
-            const ad = new Ad({
+            const updatedAd = await Ad.findOneAndUpdate({ slug }, {
                 ...req.body,
-                slug: slugify(`${propertyType}-for-${action}-address-${address}-price-${price}-${nanoid(
-                    6
-                )}`),
-                postedBy: req.user._id,
+                slug: slugify(`${propertyType}-for-${action}-address-${address}-price-${price}-${nanoid(6)}`),
                 location: {
                     type: 'Point',
                     coordinates: [location.coordinates[0], location.coordinates[1]]
                 },
                 googleMap,
-            });
-            await ad.save();
+            }, { new: true });
 
-            // update user role to seller
-            const user = await User.findByIdAndUpdate(req.user._id, {
-                $addToSet: { role: "Seller" },
-            });
-            user.password = undefined;
-
-            // res.json({ok:true});
-            res.json({ ad, user });
+            res.json({ ok: true, updatedAd });
         } catch (err) {
             console.log(err);
-            res.json({
-                error: "Create ad failed"
+            res.status(500).json({
+                error: "Update ad failed"
             });
         }
     } catch (err) {
         console.log(err);
-        res.json({
-            error: "Create ad failed",
+        res.status(500).json({
+            error: "Update ad failed",
         });
     }
 };
