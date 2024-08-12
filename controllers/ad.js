@@ -1,4 +1,5 @@
 import { uploadImageToS3, deleteImageFromS3 } from '../helpers/upload.js';
+import { sendContactEmailToAgent } from "../helpers/email.js";
 import { geocoderAddress } from '../helpers/google.js';
 import Ad from "../models/ad.js";
 import User from "../models/user.js";
@@ -120,7 +121,7 @@ export const createAd = async (req, res) => {
     }
 };
 
-export const read = async (req, res) => {
+export const readAd = async (req, res) => {
     try {
         const { slug } = req.params;
 
@@ -383,6 +384,32 @@ export const updateAdStatus = async (req, res) => {
         console.log(err);
         res.json({
             error: "Failed to update status. Try again.",
+        });
+    }
+};
+
+export const contactAgent = async (req, res) => {
+    try {
+        const { adId, message } = req.body;
+
+        const ad = await Ad.findById(adId).populate("postedBy");
+        if (!ad) {
+            return res.status(404).json({ error: "Ad not found" });
+        }
+
+        // add ad to user's enquiredProperties list
+        const user = await User.findByIdAndUpdate(req.user_id, {
+            $addToSet: { enquiredProperties: adId },
+        });
+
+        //  send contact email to agent with user name phone message and ad link
+        await sendContactEmailToAgent(ad, user, message);
+
+        res.json({ ok: true });
+    } catch (err) {
+        console.log(err);
+        res.json({
+            error: "Failed to fetch contact agent. Try again.",
         });
     }
 };
