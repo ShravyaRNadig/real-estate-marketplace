@@ -24,4 +24,6 @@ router.get('/enquired-ads/:page', requireSignin, ad.enquiredAds);
 router.put('/toggle-wishlist/:adId', requireSignin, ad.toggleWishlist);
 router.get('/wishlist/:page', requireSignin, ad.wishlist);
 
+router.post('/search-ads', ad.searchAds);
+
 export default router;

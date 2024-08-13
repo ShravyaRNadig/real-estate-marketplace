@@ -501,7 +501,7 @@ export const wishlist = async (req, res) => {
             .limit(pageSize)
             .sort({ createdAt: -1 });
 
-            res.json({ ads, page, totalPages: Math.ceil(totalAds / pageSize) });   
+        res.json({ ads, page, totalPages: Math.ceil(totalAds / pageSize) });
     } catch (err) {
         console.log(err);
         res.json({
@@ -510,3 +510,87 @@ export const wishlist = async (req, res) => {
     }
 };
 
+export const searchAds = async (req, res) => {
+    try {
+        const {
+            address,
+            price,
+            page = 1,
+            action,
+            propertyType,
+            bedrooms,
+            bathrooms
+        } = req.body;
+
+        const pageSize = 2; // Adjust as needed
+
+        if (!address) {
+            return res.status(400).json({ error: "Address is required" });
+        }
+
+        //  geocode the address to get coordinates
+        let geo = await geocoderAddress(address);
+
+        // function to check if a value is numeric
+        const isNumeric = (value) => {
+            return !isNaN(value) && !isNaN(parseFloat(value));
+        };
+
+        // construct the query object with all search parameters
+        let query = { // published: true,           
+            location: {
+                $geoWithin: {
+                    $centerSphere: [
+                        [geo?.location?.coordinates[0], geo?.location?.coordinates[1]],
+                        10 / 6378, // 10km radius, converted to radians
+                    ],
+                },
+            },
+        };
+
+        if (action) {
+            query.action = action;
+        }
+        if (propertyType && propertyType !== "All") {
+            query.propertyType = propertyType;
+        }
+        if (bedrooms && bedrooms !== "All") {
+            query.bedrooms = bedrooms;
+        }
+        if (bathrooms && bathrooms !== "All") {
+            query.bathrooms = bathrooms;
+        }
+
+        // add price range filter to the query only if its a valid number
+        if (isNumeric(price)) {
+            const numericPrice = parseFloat(price);
+            const minPrice = numericPrice * 0.8;
+            const maxPrice = numericPrice * 1.2;
+
+            query.price = {
+                $regex: new RegExp(`^(${minPrice.toFixed(0)}|${maxPrice.toFixed(0)})`),
+            };
+        }
+       
+        let ads = await Ad.find(query)  // fetch ads matching all criteria, including price range
+        .limit(pageSize)
+        .skip((page -1) * pageSize)
+        .sort({createdAt: -1})
+        .select("-googleMap")
+
+        // count total matching ads for pagination
+        const totalAds = await Ad.countDocuments(query);
+
+        return res.json({ // return response with matching ads and pagination information
+            ads,
+            total: totalAds,
+            page,
+            totalPages: Math.ceil(totalAds / pageSize),
+        });
+    } catch (err) {
+        console.log(err);
+        res.json({
+            error: "Failed to search ads. Try again.",
+        });
+    }
+};
