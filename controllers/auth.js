@@ -210,3 +210,41 @@ export const updateUserName = async (req, res) => {
         });
     }
 };
+
+export const updateProfile = async (req, res) => {
+    try {
+        const { name, phone, company, address, about, photo, logo } = req.body;
+
+        const updateFields = {};
+        if (name) updateFields.name = name.trim();
+        if (phone) updateFields.phone = phone.trim();
+        if (company) updateFields.company = company.trim();
+        if (address) updateFields.address = address.trim();
+        if (about) updateFields.about = about.trim();
+        if (photo) updateFields.photo = photo.trim();
+        if (logo) updateFields.logo = logo.trim();
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            updateFields, {
+                new: "true"
+            }
+        );
+
+        if(!updateUser) {
+            return res.json({
+                error: "User not found",
+            });
+        }
+
+        updatedUser.password = undefined;
+
+        res.json(updatedUser);
+    } catch (err) {
+        console.log("Update profile error", err);
+        res.json({
+            error: "Update profile failed. Try again.",
+        });
+    }
+};
+
