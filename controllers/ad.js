@@ -482,3 +482,31 @@ export const toggleWishlist = async (req, res) => {
         });
     }
 };
+
+export const wishlist = async (req, res) => {
+    try {
+        const page = req.params.page ? parseInt(req.params.page) : 1;
+        const pageSize = 2;
+
+        const skip = (page - 1) * pageSize;
+
+        const user = await User.findById(req.user._id); // user.wishlist[1,2,3]
+
+        const totalAds = await Ad.countDocuments({ _id: { $in: user.wishlist } });
+
+        const ads = await Ad.find({ _id: { $in: user.wishlist } })
+            .select('-googleMap')
+            .populate('postedBy', 'name username email phone company photo logo')
+            .skip(skip)
+            .limit(pageSize)
+            .sort({ createdAt: -1 });
+
+            res.json({ ads, page, totalPages: Math.ceil(totalAds / pageSize) });   
+    } catch (err) {
+        console.log(err);
+        res.json({
+            error: "Failed to fetch user wishlist ad. Try again.",
+        });
+    }
+};
+

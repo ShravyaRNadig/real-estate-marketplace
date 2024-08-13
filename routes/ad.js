@@ -22,5 +22,6 @@ router.post('/contact-agent', requireSignin, ad.contactAgent);
 router.get('/enquired-ads/:page', requireSignin, ad.enquiredAds);
 
 router.put('/toggle-wishlist/:adId', requireSignin, ad.toggleWishlist);
+router.get('/wishlist/:page', requireSignin, ad.wishlist);
 
 export default router;
