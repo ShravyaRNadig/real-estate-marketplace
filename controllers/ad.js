@@ -1,6 +1,7 @@
 import { uploadImageToS3, deleteImageFromS3 } from '../helpers/upload.js';
 import { sendContactEmailToAgent } from "../helpers/email.js";
 import { geocoderAddress } from '../helpers/google.js';
+import { incrementViewCount } from '../helpers/ad.js'
 import Ad from "../models/ad.js";
 import User from "../models/user.js";
 import { nanoid } from "nanoid";
@@ -97,12 +98,14 @@ export const createAd = async (req, res) => {
                 },
                 googleMap,
             });
+
             await ad.save();
 
             // update user role to seller
             const user = await User.findByIdAndUpdate(req.user._id, {
                 $addToSet: { role: "Seller" },
             });
+
             user.password = undefined;
 
             // res.json({ok:true});
@@ -169,6 +172,9 @@ export const readAd = async (req, res) => {
             select: 'name username email phone company photo logo role',
         });
 
+        // increment view 
+        incrementViewCount(ad._id);
+        
         res.json({ ad, related: relatedWithPopulatedPostedBy });
     } catch (err) {
         console.log(err);
