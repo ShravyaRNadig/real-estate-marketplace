@@ -448,3 +448,37 @@ export const enquiredAds = async (req, res) => {
     }
 };
 
+export const toggleWishlist = async (req, res) => {
+    try {
+        const adId = req.params;
+        const userId = req.user._id;
+
+        // find the user
+        const user = await User.findById(userId);
+
+        // check if the adId is in the user's wishlist
+        const isInWishlist = user.wishlist.includes(adId);
+
+        // toggle wishlist
+        const update = isInWishlist
+            ? { $pull: { wishlist: adId } }
+            : { $addToSet: { wishlist: adId } };
+
+        const updatedUser = await User.findByIdAndUpdate(userId, update, {
+            new: true
+        });
+
+        res.json({
+            ok: true,
+            message: isInWishlist
+                ? "Ad removed from wishlist"
+                : "Ad added to wishlist",
+            wishlist: updatedUser.wishlist,
+        });
+    } catch (err) {
+        console.log(err);
+        res.json({
+            error: "Failed to toggle wishlist. Try again.",
+        });
+    }
+};
