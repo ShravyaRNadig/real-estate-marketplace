@@ -1,6 +1,6 @@
 import express from 'express';
 import * as ad from '../controllers/ad.js';
-import { requireSignin } from '../middlewares/auth.js';
+import { isAdmin, requireSignin } from '../middlewares/auth.js';
 import multer from 'multer';
 
 const router = express.Router();
@@ -25,5 +25,13 @@ router.put('/toggle-wishlist/:adId', requireSignin, ad.toggleWishlist);
 router.get('/wishlist/:page', requireSignin, ad.wishlist);
 
 router.post('/search-ads', ad.searchAds);
+
+// admin route
+router.put(
+    '/toggle-published/:adId',
+    requireSignin,
+    isAdmin,
+    ad.togglePublished
+);
 
 export default router;

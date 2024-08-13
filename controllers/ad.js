@@ -571,12 +571,12 @@ export const searchAds = async (req, res) => {
                 $regex: new RegExp(`^(${minPrice.toFixed(0)}|${maxPrice.toFixed(0)})`),
             };
         }
-       
+
         let ads = await Ad.find(query)  // fetch ads matching all criteria, including price range
-        .limit(pageSize)
-        .skip((page -1) * pageSize)
-        .sort({createdAt: -1})
-        .select("-googleMap")
+            .limit(pageSize)
+            .skip((page - 1) * pageSize)
+            .sort({ createdAt: -1 })
+            .select("-googleMap")
 
         // count total matching ads for pagination
         const totalAds = await Ad.countDocuments(query);
@@ -591,6 +591,30 @@ export const searchAds = async (req, res) => {
         console.log(err);
         res.json({
             error: "Failed to search ads. Try again.",
+        });
+    }
+};
+
+// admin function
+export const togglePublished = async (req, res) => {
+    try {
+        const { adId } = req.params;
+        const ad = await Ad.findById(adId);
+
+        // update the published status
+        const updatedAd = await Ad.findByIdAndUpdate(adId, {
+            published: ad.published ? false : true
+        });
+
+        res.json({
+            ok: true,
+            message: ad.published? "Ad unpublished": "Ad published",
+            ad: updateAd,
+        })
+    } catch (err) {
+        console.log(err);
+        res.json({
+            error: "Failed to toggle published. Try again",
         });
     }
 };
