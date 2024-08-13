@@ -19,4 +19,6 @@ router.get('/user-ads/:page', requireSignin, ad.userAds);
 router.put('/update-ad-status/:slug', requireSignin, ad.updateAdStatus);
 router.post('/contact-agent', requireSignin, ad.contactAgent);
 
+router.get('/enquired-ads/:page',ad.enquiredAds );
+
 export default router;

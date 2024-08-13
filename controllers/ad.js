@@ -174,7 +174,7 @@ export const readAd = async (req, res) => {
 
         // increment view 
         incrementViewCount(ad._id);
-        
+
         res.json({ ad, related: relatedWithPopulatedPostedBy });
     } catch (err) {
         console.log(err);
@@ -403,8 +403,7 @@ export const contactAgent = async (req, res) => {
             return res.status(404).json({ error: "Ad not found" });
         }
 
-        // add ad to user's enquiredProperties list
-        const user = await User.findByIdAndUpdate(req.user_id, {
+        const user = await User.findByIdAndUpdate(req.user_id, { // add ad to user's enquiredProperties list
             $addToSet: { enquiredProperties: adId },
         });
 
@@ -417,6 +416,35 @@ export const contactAgent = async (req, res) => {
         res.json({
             error: "Failed to fetch contact agent. Try again.",
         });
+    }
+};
+
+export const enquiredAds = async (req, res) => {
+    try {
+        const page = req.params.page ? parseInt(req.params.page) : 1;
+        const pageSize = 2;
+
+        const skip = (page - 1) * pageSize;
+
+        const user = await User.findById(req.user._id); //user.enquiredProperties [1,2,3]
+
+        const totalAds = await Ad.countDocuments({
+            _id: { $in: user.enquiredProperties }
+        });
+
+        const ads = await Ad.find({ _id: { $in: user.enquiredProperties } })
+            .select('-googleMap')
+            .populate('postedBy', 'name username email phone company photo logo')
+            .skip(skip)
+            .limit(pageSize)
+            .sort({ createdAt: -1 });
+
+        res.json({ ads, page, totalPages: Math.ceil(totalAds / pageSize) });
+    } catch (err) {
+        console.log(err);
+        res.json({
+            error: "Failed to fetch. Try again"
+        })
     }
 };
 
